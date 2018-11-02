@@ -1,0 +1,18 @@
+# We should consider to get all needed metrics with a fewer queries as possible
+# See pgsql_exported project as example: https://github.com/wrouesnel/postgres_exporter
+queries:
+  - id: pg_stat_database
+    provides: xact_commit, xact_rollback
+    query: >
+      select xact_commit, xact_rollback from pg_stat_database;
+metrics:
+  - name: TPS
+    description: Number of transactions in this database that have been committed
+    datatype: integer
+    type: query
+    query: $pg_stat_database
+  - name: xact_rollback
+    description: Number of transactions in this database that have been rolled back
+    datatype: integer
+    type: query
+    query: $pg_stat_database
