@@ -1,0 +1,6 @@
+# Giravve main configuration file
+clusters:
+  local:
+    dsn: postgresql://postgres@127.0.0.1:9000
+receivers:
+  uri: http://127.0.0.1:1984

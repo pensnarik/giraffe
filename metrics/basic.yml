@@ -1,18 +1,40 @@
 # We should consider to get all needed metrics with a fewer queries as possible
 # See pgsql_exported project as example: https://github.com/wrouesnel/postgres_exporter
 queries:
-  - id: pg_stat_database
+  pg_stat_database:
     provides: xact_commit, xact_rollback
     query: >
-      select xact_commit, xact_rollback from pg_stat_database;
+      select datname as db, xact_commit, xact_rollback from pg_stat_database;
+  pg_stat_activity:
+    query: >
+      select datname as db,
+             count(case when state = 'active' then 1 else 0 end) as active_connections,
+             count(case when state = 'inactive' then 1 else 0 end) as inactive_connections
+        from pg_stat_activity
+       group by datname
 metrics:
-  - name: TPS
+  xact_commit:
     description: Number of transactions in this database that have been committed
     datatype: integer
     type: query
     query: $pg_stat_database
-  - name: xact_rollback
+  xact_rollback:
     description: Number of transactions in this database that have been rolled back
     datatype: integer
     type: query
     query: $pg_stat_database
+  version:
+    description: PostgreSQL version
+    datatype: string
+    type: query
+    query: select '<all>' as db, version()
+  active_connections:
+    description: Number of currently running queries in database
+    datatype: integer
+    type: query
+    query: $pg_stat_activity
+  inactive_connections:
+    description: Number of connection with status = 'inactive'
+    datatype: integer
+    type: query
+    query: $pg_stat_activity

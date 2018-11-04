@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+
+import sys
+import yaml
+import time
+import datetime as dt
+
+import psycopg2
+import psycopg2.extras
+import requests
+
+class App():
+
+    clusters = {}
+    receivers = {}
+
+    def connect(self):
+        for (cluster_name, cluster) in self.clusters.items():
+            self.clusters[cluster_name] = psycopg2.connect(cluster['dsn'])
+
+    def init(self):
+        config = yaml.load(open('giraffe.yml', 'rt'))
+        self.clusters = config['clusters']
+        self.receivers = config['receivers']
+        self.config = yaml.load(open('metrics/basic.yml', 'rt'))
+
+    def get_query_by_name(self, name):
+        return self.config['queries'][name[1:]]['query']
+
+    def get_metrics(self, cluster):
+        print(self.config['metrics'])
+        for (metric_name, metric) in self.config['metrics'].items():
+            if metric['query'].startswith('$'):
+                query = self.get_query_by_name(metric['query'])
+            else:
+                query = metric['query']
+
+            cursor = self.clusters[cluster].cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cursor.execute(query)
+
+            for row in cursor.fetchall():
+                yield {'cluster': cluster, 'metric': metric_name,
+                       'db': row['db'], 'value': row[metric_name],
+                       'timestamp': dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+            cursor.close()
+
+    def send_packet(self, packet):
+        for (receiver_name, receiver) in self.receivers.items():
+            print(receiver)
+            result = requests.post('%s/receive' % receiver, json=packet)
+
+    def run(self):
+        self.init()
+        self.connect()
+
+        while True:
+            packet = {}
+
+            for cluster in self.clusters:
+                metrics = []
+
+                # TODO: Query metrics in parallel when it's possible
+                for metric in self.get_metrics(cluster):
+                    print(metric)
+                    metrics.append(metric)
+
+                packet[cluster] = metrics
+
+            # TODO: Send async
+            self.send_packet(packet)
+
+            time.sleep(5)
+
+if __name__ == '__main__':
+    app = App()
+    sys.exit(app.run())
