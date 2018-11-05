@@ -1,4 +1,6 @@
-create schema giraffe;
+create schema giraffe authorization giraffe;
+
+set role giraffe;
 
 create table giraffe.metric
 (
@@ -24,3 +26,21 @@ create table giraffe.metric_value
 );
 
 comment on table giraffe.metric_value is 'Metric values';
+
+create or replace
+function giraffe.init_metric(aname varchar, adescription text) returns integer as $$
+declare
+    vid integer;
+begin
+    lock table giraffe.metric;
+    select id into vid from giraffe.metric where name = aname;
+    if vid is null then
+        insert into giraffe.metric(name, description)
+        values(aname, adescription)
+        returning id into vid;
+    end if;
+    return vid;
+end;
+$$ language plpgsql security definer;
+
+reset role;
