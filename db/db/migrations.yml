@@ -7,4 +7,4 @@ callbacks:
         - callbacks/afterEach
     afterAll:
         - callbacks/afterAll
-conn: postgresql://migrator@127.0.0.1:20000/giraffe
+conn: postgresql://migrator@/giraffe
