@@ -9,7 +9,9 @@ queries:
     query: >
       select datname as db,
              count(case when state = 'active' then 1 else 0 end) as active_connections,
-             count(case when state = 'inactive' then 1 else 0 end) as inactive_connections
+             count(case when state = 'inactive' then 1 else 0 end) as inactive_connections,
+             coalesce(max(case when state = 'active' then extract(epoch from now() - xact_start) else null end), 0)::integer as longest_query,
+             coalesce(max(case when state in ('active', 'idle in transaction') then extract(epoch from now() - xact_start) else null end), 0)::integer as longest_transaction
         from pg_stat_activity
        group by datname
 metrics:
@@ -35,6 +37,16 @@ metrics:
     query: $pg_stat_activity
   inactive_connections:
     description: Number of connection with status = 'inactive'
+    datatype: integer
+    type: query
+    query: $pg_stat_activity
+  longest_transaction:
+    description: Longest running transaction in database
+    datatype: integer
+    type: query
+    query: $pg_stat_activity
+  longest_query:
+    description: Longest running query in database
     datatype: integer
     type: query
     query: $pg_stat_activity
