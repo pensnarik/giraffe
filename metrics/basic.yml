@@ -25,11 +25,6 @@ metrics:
     datatype: integer
     type: query
     query: $pg_stat_database
-  version:
-    description: PostgreSQL version
-    datatype: string
-    type: query
-    query: select '<all>' as db, version()
   active_connections:
     description: Number of currently running queries in database
     datatype: integer
