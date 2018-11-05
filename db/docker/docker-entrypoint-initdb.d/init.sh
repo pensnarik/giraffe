@@ -15,7 +15,8 @@ sed -ri "s/#(synchronous_commit) = .*/\1 = ${PG_SYNCHRONOUS_COMMIT:-off}/" "${PG
 pg_ctl -D "${PGDATA}" -w restart
 
 psql -c "CREATE DATABASE giraffe"
-psql -c "create user migrator with password 'migrator' superuser;"
-psql -c "create user web with password 'web';"
+psql -c "create user migrator with password 'migrator' superuser"
+psql -c "create user web with password 'web'"
+psql -c "create user giraffe with password 'giraffe'"
 
 pgmigrate -t latest migrate
