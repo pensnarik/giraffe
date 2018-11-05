@@ -15,5 +15,4 @@ RUN pip3 install yandex-pgmigrate
 
 COPY docker/docker-entrypoint-initdb.d /docker-entrypoint-initdb.d/
 COPY db /db
-RUN sed -i "s/20000/5432/" /db/migrations.yml
 WORKDIR /db
