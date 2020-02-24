@@ -1,0 +1,34 @@
+version: '2'
+
+networks:
+  giraffe:
+
+services:
+  giraffe-db:
+    image: giraffe
+    build: ./db
+    cpuset: 0,1
+    mem_limit: 512M
+    networks:
+      - giraffe
+    ports:
+      - '20000:5432'
+
+  giraffe-watchdog:
+    image: giraffe-watchdog
+    build: ./watchdog
+    networks:
+      - giraffe
+    command:
+      - /usr/local/bin/giraffe
+      - --cluster=postgresql://postgres@giraffe-db/giraffe
+      - --receiver=http://giraffe-api:1984
+
+  giraffe-api:
+    image: giraffe-api
+    build: ./receiver
+    networks:
+      - giraffe
+    ports:
+      - '1984:1984'
+

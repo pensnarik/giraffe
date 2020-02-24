@@ -3,6 +3,7 @@
 import sys
 import yaml
 import time
+import argparse
 import datetime as dt
 
 import psycopg2
@@ -14,15 +15,31 @@ class App():
     clusters = {}
     receivers = {}
 
+    def __init__(self):
+        arg_parser = argparse.ArgumentParser(description='Giraffe watchdog')
+        arg_parser.add_argument('--cluster', type=str, help='Cluster to monitor')
+        arg_parser.add_argument('--receiver', type=str, help='Giraffe REST API URL')
+        self.args = arg_parser.parse_args()
+
+        if self.args.cluster is not None and self.args.receiver is not None:
+            self.clusters['from_args'] = {'dsn': self.args.cluster}
+            self.receivers['from_args'] = self.args.receiver
+        else:
+            self.read_config_from_file()
+
+        self.read_metrics_from_file()
+
     def connect(self):
         for (cluster_name, cluster) in self.clusters.items():
             self.clusters[cluster_name] = psycopg2.connect(cluster['dsn'])
 
-    def init(self):
+    def read_config_from_file(self):
         config = yaml.load(open('giraffe.yml', 'rt'))
         self.clusters = config['clusters']
         self.receivers = config['receivers']
-        self.config = yaml.load(open('metrics/basic.yml', 'rt'))
+
+    def read_metrics_from_file(self):
+        self.config = yaml.load(open('/usr/local/etc/giraffe.d/basic.yml', 'rt'))
 
     def get_query_by_name(self, name):
         return self.config['queries'][name[1:]]['query']
@@ -51,7 +68,6 @@ class App():
             result = requests.post('%s/receive' % receiver, json=packet)
 
     def run(self):
-        self.init()
         self.connect()
 
         while True:

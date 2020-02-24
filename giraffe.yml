@@ -1,4 +1,4 @@
-# Giravve main configuration file
+# Giraffe main configuration file
 clusters:
   local:
     dsn: postgresql://postgres@127.0.0.1:20000

@@ -1,0 +1,9 @@
+basic.yml
+giraffe
+setup.py
+giraffe_watchdog.egg-info/PKG-INFO
+giraffe_watchdog.egg-info/SOURCES.txt
+giraffe_watchdog.egg-info/dependency_links.txt
+giraffe_watchdog.egg-info/requires.txt
+giraffe_watchdog.egg-info/top_level.txt
+libgiraffe/__init__.py
