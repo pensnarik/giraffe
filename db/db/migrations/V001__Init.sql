@@ -1,5 +1,7 @@
 create schema giraffe authorization giraffe;
 
+grant usage on schema giraffe to web;
+
 set role giraffe;
 
 create table giraffe.metric
@@ -11,6 +13,8 @@ create table giraffe.metric
 );
 
 comment on table giraffe.metric is 'Metric dictionary';
+
+grant select on table giraffe.metric to web;
 
 create table giraffe.metric_value
 (
@@ -27,6 +31,8 @@ create table giraffe.metric_value
 );
 
 comment on table giraffe.metric_value is 'Metric values';
+
+grant select on table giraffe.metric_value to web;
 
 create or replace
 function giraffe.init_metric(aname varchar, adescription text) returns integer as $$

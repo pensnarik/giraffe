@@ -13,6 +13,9 @@ services:
       - giraffe
     ports:
       - '20000:5432'
+    command: postgres -c shared_preload_libraries=pg_stat_statements -c log_min_duration_statement=0
+    environment:
+      POSTGRES_INITDB_ARGS: '-E UTF8 --lc-collate=en_US.UTF-8 --lc-ctype=en_US.UTF-8'
 
   giraffe-watchdog:
     image: giraffe-watchdog
@@ -32,3 +35,10 @@ services:
     ports:
       - '1984:1984'
 
+  giraffe-gui:
+    image: giraffe-gui
+    build: ./gui
+    networks:
+      - giraffe
+    ports:
+      - '1985:80'
