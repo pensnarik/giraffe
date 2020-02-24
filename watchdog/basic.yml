@@ -4,7 +4,11 @@ queries:
   pg_stat_database:
     provides: xact_commit, xact_rollback
     query: >
-      select datname as db, xact_commit, xact_rollback from pg_stat_database;
+      select datname as db,
+             xact_commit,
+             xact_rollback,
+             pg_database_size(datname) as database_size
+        from pg_stat_database;
   pg_stat_activity:
     query: >
       select datname as db,
@@ -46,3 +50,8 @@ metrics:
     datatype: integer
     type: query
     query: $pg_stat_activity
+  database_size:
+    description: Database size in bytes
+    datatype: integer
+    type: query
+    query: $pg_stat_database

@@ -14,6 +14,7 @@ class App():
 
     clusters = {}
     receivers = {}
+    metric_ids = {}
 
     def __init__(self):
         arg_parser = argparse.ArgumentParser(description='Giraffe watchdog')
@@ -56,19 +57,30 @@ class App():
             cursor.execute(query)
 
             for row in cursor.fetchall():
-                yield {'cluster': cluster, 'metric': metric_name,
-                       'db': row['db'], 'value': row[metric_name],
-                       'timestamp': dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                if row['db'] not in ['template0', 'template1', 'postgres']:
+                    yield {'cluster': cluster, 'metric': metric_name,
+                           'db': row['db'], 'value': row[metric_name],
+                           'id': self.metric_ids[metric_name],
+                           'timestamp': dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
             cursor.close()
 
     def send_packet(self, packet):
         for (receiver_name, receiver) in self.receivers.items():
-            print(receiver)
             result = requests.post('%s/receive' % receiver, json=packet)
+
+    def propose(self):
+        for (receiver_name, receiver) in self.receivers.items():
+            response = requests.post('%s/propose' % receiver, json=self.config['metrics'])
+
+            if response.status_code != 200 or response.json()['result'] != 'ok':
+                raise Exception("Cannot propose metrics to the database")
+
+            self.metric_ids = response.json()['metrics']
 
     def run(self):
         self.connect()
+        self.propose()
 
         while True:
             packet = {}
@@ -78,7 +90,6 @@ class App():
 
                 # TODO: Query metrics in parallel when it's possible
                 for metric in self.get_metrics(cluster):
-                    print(metric)
                     metrics.append(metric)
 
                 packet[cluster] = metrics
